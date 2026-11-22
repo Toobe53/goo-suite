@@ -38,15 +38,12 @@ All local numbers below were produced on this machine, not estimated. Environmen
 
 ### CI artifacts / CI 产物
 
-The release workflow builds the same three artifacts on each runner. Zip metadata
-differs between operating systems, so the SHA-256 values below are the hashes of the
-uploaded CI artifacts, not of a local rebuild.
-
-| Artifact | Linux x64 | macOS arm64 | Windows x64 |
-| --- | --- | --- | --- |
-| `goo_npr-1.0.0.zip` | `056cce7417059137d2cf05f9476e3ff46599337207a1d020ff992063711085a3` | same as Linux | `95c59c9a7e683ca52d0c146cf8e548deb364011284f3cfebb91cafff987ebb30` |
-| `goo_suite-1.0.0-py3-none-any.whl` | `a576c4b01e024a5fb1f445768032c490efeb5aa0892f4226659699410075bbfd` | `7d2e699db0212a5b840d941d578fc6e97d6cb925d3a38b551e1d6eff3aefdeef` | `47dacc9dcf3115fd0024ccc27382ed033bdea7408264d5574f827e3b89ba9d48` |
-| `goo-suite-1.0.0-src.zip` | `5b0315761377da252644716b73f5a8932ed287a335f631455d9dd649b71137b9` | same as Linux | `9b0b9428d441785298151eb6f9564f88fd054342b7cdca47beb32b02827e89c9` |
+The release workflow builds the same three artifacts on each runner and uploads them
+as `goo-suite-linux-x64`, `goo-suite-macos-arm64` and `goo-suite-windows-x64`.
+Zip metadata differs between operating systems, and wheel builds carry timestamps, so
+hashes are not stable across rebuilds. The authoritative hashes are in the release's
+`SHA256SUMS`; after downloading a release directory run `goo verify --dist <dir>` to
+recompute every hash and check the required archive members.
 
 ## 1. Blender 5.2 API probes / API 探测
 

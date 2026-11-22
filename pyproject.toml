@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goo-suite"
+version = "1.0.0"
+description = "GOO Suite: NPR node library, Blender add-on, local/remote render manager and compatibility reports for Blender 5.2"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "GOO Suite contributors" }]
+keywords = ["blender", "npr", "goo-engine", "light-groups", "eevee", "remote-rendering"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Plugins",
+  "Environment :: X11 Applications",
+  "Environment :: Win32 (MS Windows)",
+  "Environment :: MacOS X",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Graphics :: 3D Modeling",
+  "Topic :: Multimedia :: Graphics :: 3D Rendering",
+]
+
+[project.scripts]
+goo = "goo.cli:main"
+goo-bridge = "goo_bridge.cli:main"
+
+[tool.setuptools]
+packages = [
+  "goo",
+  "goo.scripts",
+  "goo_npr",
+  "goo_npr.nodes",
+  "goo_npr.ui",
+  "goo_npr.tools",
+  "goo_bridge",
+  "goo_bridge.data",
+  "goo_bridge.scripts",
+]
+
+[tool.setuptools.package-data]
+"goo_npr" = ["*.toml"]
+"goo_bridge.data" = ["*.json"]
+"goo_bridge.scripts" = ["*.py"]
+"goo.scripts" = ["*.py"]

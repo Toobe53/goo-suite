@@ -1,0 +1,357 @@
+{
+  "source": "GOO Engine 4.4 (goo-engine-v4.4-release, Blender 4.4.3)",
+  "target": "Blender 5.2",
+  "total": 49,
+  "counts": {
+    "Ported": 9,
+    "Native": 1,
+    "Approx": 25,
+    "N/A": 14,
+    "Not shipped": 0
+  },
+  "rows": [
+    {
+      "section": "Shading and lighting",
+      "feature": "Goo Engine Add-menu section",
+      "implementation": "`Add ▸ GOO Engine` sub-menu (Shader / Textures / Compositor / Utility), `goo.add_node_group`",
+      "status": "Ported",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Shader Info — Diffuse Shading / Cast Shadows / Self Shadows / Ambient Lighting / Half-lambert factor",
+      "implementation": "`GOO Shader Info` (24 nodes): white Diffuse → `Shader to RGB` gives EEVEE luminance; `Cast Shadows=(1-AO_wide)·ShadowStrength`, `Self Shadows=(1-AO_narrow)` (off by default), `Ambient=AmbientColor·Strength·AO_wide`. GOO itself evaluates these **per light in C++** (`closure_eval_surface_lib.glsl`)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Material Check Self Shadowing",
+      "implementation": "`Material.goo_check_self_shadowing` + `GOO Shader Info ▸ Check Self Shadowing` input; a metadata flag, it does not change the renderer",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Light Groups — name-based groups on lights/materials, per-group shadow toggle, default group",
+      "implementation": "`Scene.goo_light_groups` + material/object links; each group owns a **detached** receiver collection assigned via native `Light.light_linking.receiver_collection`; `use_shadow` written with backup/restore; empty groups hide their lights; `goo render --light-groups` + `goo composite` reproduce the image linearly (1e-6 mean diff)",
+      "status": "Approx (+CLI)",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Shadow ID `High ID Bit Depth` (32-bit shadow IDs)",
+      "implementation": "`Scene.goo_high_bit_depth` / `Material.goo_check_self_shadowing` flags only; EEVEE Next has no shadow ID buffer",
+      "status": "N/A (flag only)",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Contact shadows (distance/bias/thickness)",
+      "implementation": "EEVEE Next has no contact-shadow controls",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Shadow buffer bias / Cascaded Shadow Maps / light-cache bake UI",
+      "implementation": "Renderer internals of the `gooengine` fork",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Set Depth — push a shader's pixel depth",
+      "implementation": "`GOO Set Depth` (16 nodes): Camera Data View Z + Mode/Scale/Offset/Near/Far → `Depth`, `View Z`, `Alpha`. It **encodes** depth for an EXR/AOV pass; no `gl_FragDepth` write",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Light Info (legacy) — chosen light's Color/Power/Perceptual Power",
+      "implementation": "`GOO Light Info` (8 nodes) + `goo.light_info_from_active`: 5 drivers (`data.energy`, `data.color[i]`, `data.specular_factor`) update live, where GOO bakes uniforms at compile time",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Light Info New — Color/Power/Position/Rotation/Distance",
+      "implementation": "`GOO Light Info New` + `goo.light_info_new_from_active`: 11 drivers (color, energy, `location[i]`, `rotation_euler[i]`, camera-to-light distance expression). GOO's node declares the five outputs but its GPU function only feeds color/power; this port supplies all five",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Holdout for transparent materials",
+      "implementation": "5.2 holdout is a whole-object mask; no alpha-blend holdout",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Material/world overrides per view layer",
+      "implementation": "GOO panel edits native `ViewLayer.material_override`, `world_override`, `samples`; `goo.clear_view_layer_overrides`; CLI `--view-layer NAME` selects one layer per render",
+      "status": "Ported (UI)",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "View-layer sample override for EEVEE",
+      "implementation": "5.2 exposes `ViewLayer.samples` (Cycles semantics); EEVEE uses `scene.eevee.taa_render_samples`; CLI takes `--samples`",
+      "status": "N/A for EEVEE",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Shift-click collection visibility to force-enable children",
+      "implementation": "`goo.collection_force_enable_children` recursively clears `hide_viewport`/`hide_render`; the Shift-click gesture is C++",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Radiance buffer copied between Refraction passes",
+      "implementation": "Renderer internal",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Shading and lighting",
+      "feature": "Principled/SSS shader internals (`GPU_MATFLAG_PRINCIPLED_*`, `use_sss`)",
+      "implementation": "C++ renderer; not exposed",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Screen space and compositing",
+      "feature": "Screen Space Info — Scene Color / Scene Depth",
+      "implementation": "`GOO Screen Space Info` (10 nodes, no inputs): Screen Position, Screen UV, View Depth, View Distance, World Position, Facing, Fresnel, Camera Vector. EEVEE Next does not expose scene buffers to shaders; use `goo render --passes depth`",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Screen space and compositing",
+      "feature": "Curvature — Scene Curvature / Scene Rim",
+      "implementation": "`GOO Curvature` (17 nodes): narrow-minus-wide AO + Layer Weight Fresnel, `Radius/Samples/Contrast`. GOO uses screen-space curvature",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Screen space and compositing",
+      "feature": "Screen-space shadows / refraction internals",
+      "implementation": "Not exposed by 5.2",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "SDF Primitive — 16 3D + 28 2D shapes",
+      "implementation": "`GOO SDF Primitive` (8 representative shapes: sphere, box, rounded box, cylinder, torus, capsule, plane, cone), `Vector/Shape/Size/Radius/Roundness` inputs",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "SDF Op — 32 operations",
+      "implementation": "`GOO SDF Op` (8: union/intersect/diff/smooth variants/onion/dilate)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "SDF Vector Op — 25 modifiers",
+      "implementation": "`GOO SDF Vector Op` (8: repeat, rotate, mirror, polar, twist, bend, grid, swizzle)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "SDF Noise",
+      "implementation": "`GOO SDF Noise` (fBM-based distance perturbation)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "Hex Grid Texture — Cell UV + integer Cell ID",
+      "implementation": "`GOO Hex Grid` (true hex tiling; outputs `Value`, `Color`, `Hex Coords`, `Position`, `Cell UV`, `Cell ID` + `Mask`/`Cell` aliases)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "Water Ripples — Drops / Ripples / Flow / Caustic",
+      "implementation": "`GOO Water Ripples` (single radial field: `Vector, Scale, Time, Wavelength, Decay, Center → Color, Height, Normal`); no mode switch",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "Twirl",
+      "implementation": "`GOO Twirl` (real 2D rotation around a center, radius falloff)",
+      "status": "Ported (+Radius/Angle)",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "OKLab Color Ramp",
+      "implementation": "`GOO OKLab Color Ramp` (4 stops, exact OKLab matrix); GOO has a full ramp widget with arbitrary stops",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "Scene Time — Start Frame / End Frame",
+      "implementation": "`GOO Scene Time` (GeometryNodeTree): native Seconds/Frame plus Start/End Frame values refreshed from `scene.frame_start/frame_end` by `frame_change_pre`/`render_pre` handlers; verified in an evaluated GN modifier",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Procedural textures",
+      "feature": "Float inputs accept inf / -inf",
+      "implementation": "Blender socket defaults reject `inf`",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Geometry nodes",
+      "feature": "Active camera override — GN `Active Camera` uses `scene.gn_camera_override` when its new `Ignore Scene Override` input is off",
+      "implementation": "`GOO Active Camera` group: `Ignore Scene Override` + `Override Camera` (Object) → `Active Camera` (Object), implemented with the native Active Camera node and an OBJECT switch; plus CLI `goo render --camera NAME`. Native nodes created without the group still read `scene.camera` (no C++ injection)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Grease Pencil",
+      "feature": "Grease Pencil 3.0",
+      "implementation": "Native in 5.2; all GOO GP tools are written against GP v3 data",
+      "status": "Native",
+      "status_class": "Native"
+    },
+    {
+      "section": "Grease Pencil",
+      "feature": "Texture Mapping randomize — Stroke/Fill offset, scale, rotation, seed",
+      "implementation": "`goo.gp_random_texture` writes a per-stroke `goo_tg_random` (CURVE, FLOAT) attribute + seed; material reads it via `Attribute`",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Grease Pencil",
+      "feature": "Context-based sculpt mode smoothing",
+      "implementation": "`goo.gp_smooth_strokes`: Laplacian smoothing of the current drawing (factor, iterations, selected-only, cyclic-aware, endpoints preserved); GOO blends it into the sculpt brush instead",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Grease Pencil",
+      "feature": "Auto-close strokes",
+      "implementation": "`goo.gp_auto_close` sets the `cyclic` CURVE boolean on selected strokes; explicit, where GOO closes while drawing",
+      "status": "Ported (explicit)",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Viewport Line Width 1.0–3.0",
+      "implementation": "`goo_viewport_linewidth_enabled` / `goo_viewport_line_width` + `gpu.state.line_width_set` draw handler; viewport only",
+      "status": "Ported",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Continuous Trackball",
+      "implementation": "Input/transform core is C++",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Isolate bones overlay",
+      "implementation": "`goo.pose_isolate_bones`: hides unselected bones and restores them on a second run (GOO keeps a view-layer flag that is active only during a modal move)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Hide pose bones / Outliner hidden-bones filter",
+      "implementation": "`PoseBone.hide_outliner` re-created on an ID property, set/cleared by `goo.pose_outliner_flag`, shown in the GOO Pose panel. Blender 5.2 has no Outliner row-filter hook; the GOO 4.4 public branch stores the flag and exposes the UI but has no consumer either, so the data model matches and only the row filter is unavailable",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Copy Rotation constraint: Invert All",
+      "implementation": "`goo.copy_rotation_invert_all` sets/clears the three per-axis invert booleans on selected bones' Copy Rotation constraints (GOO stores one `ROTLIKE_INVERT_ALL` bit)",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Merge Bone Constraints",
+      "implementation": "`goo.pose_constraints_merge`: copies constraints from a source armature by bone name onto the selected bones of the active rig, re-linking `target`/`space_object`; GOO also walks selected bones across multiple objects",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Animation, rigging and viewport",
+      "feature": "Library Override Resync Enforce ignores Action ID pointers",
+      "implementation": "C++ resync logic",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Disable Search on Key Press",
+      "implementation": "Add-menu search is C++",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Scene camera drop-down in the top bar",
+      "implementation": "`GOO View Layer Overrides` panel: native `scene.camera` + `goo.set_scene_camera`; the top bar cannot be extended from Python",
+      "status": "Approx",
+      "status_class": "Approx"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Transparency toggle in the World tab",
+      "implementation": "`GOO World Settings` toggles `scene.render.film_transparent`",
+      "status": "Ported",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Topology Mirror next to X/Y/Z mirror",
+      "implementation": "`goo.toggle_topology_mirror` writes the native `use_mirror_topology` property",
+      "status": "Ported",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Option to turn off material icon rendering",
+      "implementation": "C++ Outliner drawing",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Render burn-in — frame + file name",
+      "implementation": "`goo render --format png --burn-in`: native Blender render stamp burned into the image (file name + frame, font scaled to output height); not available for EXR or light-group composites",
+      "status": "Ported (CLI)",
+      "status_class": "Ported"
+    },
+    {
+      "section": "Interface and pipeline",
+      "feature": "Linked scene strips with relative paths in the VSE",
+      "implementation": "C++ VSE path handling",
+      "status": "N/A",
+      "status_class": "N/A"
+    },
+    {
+      "section": "Platforms",
+      "feature": "Windows, macOS, Linux",
+      "implementation": "Pure-Python add-on + standard-library CLI; no platform binaries. Verified on Windows 11 + Blender 5.2.3",
+      "status": "Ported (Windows verified)",
+      "status_class": "Ported"
+    }
+  ]
+}

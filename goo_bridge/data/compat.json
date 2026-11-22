@@ -1,0 +1,604 @@
+{
+  "schema_version": 1,
+  "title": "GOO Bridge compatibility matrix",
+  "source": {
+    "matrix": "goo-port/docs/feature-matrix.json",
+    "features": "goo-port/docs/features.md",
+    "total_rows": 49,
+    "goo_engine": "GOO Engine 4.4 (goo-engine-v4.4-release, Blender 4.4.3)"
+  },
+  "target": {
+    "blender": "5.2",
+    "engine": "BLENDER_EEVEE"
+  },
+  "levels": {
+    "L2": "Fully bridged: the bridge ships the asset/CLI path and detects it, or stock Blender 5.2 already provides the behaviour.",
+    "L1": "Partial: an asset or operator reproduces the intent but the path differs from GOO, or one manual step remains.",
+    "L0": "Unreachable: lives in GOO's C++ renderer or Blender's core/UI; the bridge reports it as unavailable."
+  },
+  "total": 39,
+  "counts": {
+    "L2": 13,
+    "L1": 15,
+    "L0": 11
+  },
+  "ids": {
+    "A": 25,
+    "N": 14
+  },
+  "items": [
+    {
+      "id": "A1",
+      "name": "Node-group asset library and Add menu",
+      "area": "pipeline",
+      "level": "L2",
+      "goo_status": "Ported",
+      "source_rows": [1],
+      "source_features": ["Goo Engine Add-menu section"],
+      "rationale": "The bridge ships the GOO node groups as assets and the analyzer already lists every GOO group found in a .blend, so the Add-menu section maps 1:1 onto stock Blender 5.2.",
+      "external_strategy": "Bundle the goo-port node groups and expose them from the bridge; analyze reports which GOO groups are present so the report can confirm adoption.",
+      "detect": {
+        "groups": ["GOO "]
+      }
+    },
+    {
+      "id": "A2",
+      "name": "View-layer overrides and collection force-enable",
+      "area": "pipeline",
+      "level": "L2",
+      "goo_status": "Ported (UI)",
+      "source_rows": [12, 14],
+      "source_features": [
+        "Material/world overrides per view layer",
+        "Shift-click collection visibility to force-enable children"
+      ],
+      "rationale": "Both behaviours are pure Python on native properties (ViewLayer.material_override/world_override and hide_viewport/hide_render), so the bridge can expose them without touching the renderer.",
+      "external_strategy": "Bridge operators write the native view-layer and collection properties; the Shift-click gesture itself stays a Blender shortcut and is not simulated.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A3",
+      "name": "Hex Grid texture",
+      "area": "procedural",
+      "level": "L2",
+      "goo_status": "Approx",
+      "source_rows": [24],
+      "source_features": ["Hex Grid Texture - Cell UV + integer Cell ID"],
+      "rationale": "The goo-port group performs real hexagonal tiling (two offset rectangular lattices, nearest-centre distance field) and was validated visually, so the texture is complete rather than an approximation.",
+      "external_strategy": "Ship the GOO Hex Grid node group; analyze detects it by name and the report marks it green.",
+      "detect": {
+        "groups": ["GOO Hex Grid"]
+      }
+    },
+    {
+      "id": "A4",
+      "name": "Twirl texture",
+      "area": "procedural",
+      "level": "L2",
+      "goo_status": "Ported (+Radius/Angle)",
+      "source_rows": [26],
+      "source_features": ["Twirl"],
+      "rationale": "The group is an exact 2D rotation around the centre with a smooth radial falloff, so it fully reproduces the GOO node.",
+      "external_strategy": "Ship the GOO Twirl node group and let the report verify its presence.",
+      "detect": {
+        "groups": ["GOO Twirl"]
+      }
+    },
+    {
+      "id": "A5",
+      "name": "Grease Pencil auto-close strokes",
+      "area": "grease-pencil",
+      "level": "L2",
+      "goo_status": "Ported (explicit)",
+      "source_rows": [34],
+      "source_features": ["Auto-close strokes"],
+      "rationale": "Setting the CURVE cyclic flag on selected strokes is a complete reproduction of the authoring result; only the while-drawing timing differs.",
+      "external_strategy": "Bridge operator writes the native cyclic flag; the report cannot inspect GP attributes, so the item is marked manual at scan time.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A6",
+      "name": "Viewport line width 1.0-3.0",
+      "area": "viewport",
+      "level": "L2",
+      "goo_status": "Ported",
+      "source_rows": [35],
+      "source_features": ["Viewport Line Width 1.0-3.0"],
+      "rationale": "A draw handler with gpu.state.line_width_set reproduces the viewport result; it is viewport-only by nature, exactly like GOO.",
+      "external_strategy": "Bridge preference plus viewport draw handler; final renders are unaffected, as in GOO.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A7",
+      "name": "Scene camera override control",
+      "area": "pipeline",
+      "level": "L2",
+      "goo_status": "Approx",
+      "source_rows": [43],
+      "source_features": ["Scene camera drop-down in the top bar"],
+      "rationale": "The bridge reads and writes native scene.camera and the analyzer records the active camera, so camera switching works even though the widget lives in a bridge panel instead of the top bar.",
+      "external_strategy": "Bridge panel and CLI --camera write scene.camera; analyze records active_camera and the report marks this item green when a camera is set.",
+      "detect": {
+        "scene": "active_camera"
+      }
+    },
+    {
+      "id": "A8",
+      "name": "Film transparency toggle",
+      "area": "pipeline",
+      "level": "L2",
+      "goo_status": "Ported",
+      "source_rows": [44],
+      "source_features": ["Transparency toggle in the World tab"],
+      "rationale": "Toggling scene.render.film_transparent is the complete native behaviour; only the panel location differs.",
+      "external_strategy": "Bridge checkbox writes film_transparent; the rendered alpha is the native Blender result.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A9",
+      "name": "Topology Mirror toggle",
+      "area": "pipeline",
+      "level": "L2",
+      "goo_status": "Ported",
+      "source_rows": [45],
+      "source_features": ["Topology Mirror next to X/Y/Z mirror"],
+      "rationale": "A toggle on the native use_mirror_topology property reproduces the mesh-editing behaviour completely.",
+      "external_strategy": "Bridge operator writes use_mirror_topology; like GOO it only affects armature/mirror editing, not rendering.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A10",
+      "name": "Render burn-in (frame + file name)",
+      "area": "pipeline",
+      "level": "L2",
+      "goo_status": "Ported (CLI)",
+      "source_rows": [47],
+      "source_features": ["Render burn-in - frame + file name"],
+      "rationale": "The bridge CLI burns Blender's native stamp into PNG output, which matches the GOO result for the supported formats and is fully automated.",
+      "external_strategy": "Bridge render command enables use_stamp, stamp_note/stamp_frame and scales the stamp for PNG output; EXR and light-group composites keep the documented limitation.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A11",
+      "name": "Light Groups workflow and compositing",
+      "area": "shading",
+      "level": "L2",
+      "goo_status": "Approx (+CLI)",
+      "source_rows": [4],
+      "source_features": ["Light Groups - name-based groups on lights/materials, per-group shadow toggle, default group"],
+      "rationale": "The bridge owns the whole workflow (group data, per-group renders and a linear composite) and the analyzer reports the light-group feature flag, so end-to-end it is complete; only the data path differs from GOO's C++ light loops.",
+      "external_strategy": "Bridge metadata plus multi-pass render and linear composite reproduce the image (mean diff near 1e-6); analyze flags compositor/light-group nodes and the report marks it green.",
+      "detect": {
+        "flags": ["light_groups"]
+      }
+    },
+    {
+      "id": "A12",
+      "name": "Cross-platform pure-Python support",
+      "area": "platform",
+      "level": "L2",
+      "goo_status": "Ported (Windows verified)",
+      "source_rows": [49],
+      "source_features": ["Windows, macOS, Linux"],
+      "rationale": "The bridge is standard-library Python plus a Blender subprocess, so it runs wherever Blender 5.2 runs; no platform binaries exist.",
+      "external_strategy": "No action needed: the bridge reports this capability as always present and documents Windows 11 as the verified platform.",
+      "detect": {
+        "always": true
+      }
+    },
+    {
+      "id": "A13",
+      "name": "GOO Shader Info and Check Self Shadowing flag",
+      "area": "shading",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [2, 3],
+      "source_features": [
+        "Shader Info - Diffuse Shading / Cast Shadows / Self Shadows / Ambient Lighting / Half-lambert factor",
+        "Material Check Self Shadowing"
+      ],
+      "rationale": "The shipped group uses Diffuse BSDF -> Shader to RGB with AO proxies for the shadow masks, while GOO evaluates the terms per light in C++; the self-shadowing flag is metadata only, so visual parity is close but not identical.",
+      "external_strategy": "Ship the GOO Shader Info asset with its Check Self Shadowing input; analyze detects the group and the report marks it yellow with the AO-proxy caveat.",
+      "detect": {
+        "groups": ["GOO Shader Info"]
+      }
+    },
+    {
+      "id": "A14",
+      "name": "Set Depth shader",
+      "area": "shading",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [8],
+      "source_features": ["Set Depth - push a shader's pixel depth"],
+      "rationale": "The group encodes normalised depth from Camera Data View Z for an EXR/AOV pass; EEVEE cannot write gl_FragDepth from Python, so the pixel-depth push itself is not reproduced.",
+      "external_strategy": "Ship the GOO Set Depth asset and consume its Depth socket via the bridge's depth pass; the report names the missing real depth-buffer write.",
+      "detect": {
+        "groups": ["GOO Set Depth"]
+      }
+    },
+    {
+      "id": "A15",
+      "name": "Light Info (legacy and New) drivers",
+      "area": "shading",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [9, 10],
+      "source_features": [
+        "Light Info (legacy) - chosen light's Color/Power/Perceptual Power",
+        "Light Info New - Color/Power/Position/Rotation/Distance"
+      ],
+      "rationale": "Value sockets plus drivers reading the active light object approximate GOO's compile-time uniforms; they update live, but group interfaces cannot carry an Object reference in Blender 5.2, so the light is chosen by an operator instead of a socket.",
+      "external_strategy": "Ship both Light Info assets and the light-info operators that write energy/color/specular/location/rotation drivers; analyze detects the groups and the report marks them yellow.",
+      "detect": {
+        "groups": ["GOO Light Info"]
+      }
+    },
+    {
+      "id": "A16",
+      "name": "Screen Space Info",
+      "area": "screen-space",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [17],
+      "source_features": ["Screen Space Info - Scene Color / Scene Depth"],
+      "rationale": "Screen Position, Screen UV, View Depth, View Distance, World Position, Facing, Fresnel and Camera Vector are reconstructed from TexCoord, Camera Data, Geometry and Layer Weight; EEVEE Next does not expose scene colour/depth buffers to shaders.",
+      "external_strategy": "Ship the GOO Screen Space Info asset and pair it with the bridge's depth pass; analyze detects the group and the report marks it yellow.",
+      "detect": {
+        "groups": ["GOO Screen Space Info"]
+      }
+    },
+    {
+      "id": "A17",
+      "name": "Curvature",
+      "area": "screen-space",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [18],
+      "source_features": ["Curvature - Scene Curvature / Scene Rim"],
+      "rationale": "Narrow-minus-wide Ambient Occlusion plus Layer Weight Fresnel approximates screen-space curvature; ordering (convex > 0.5, flat = 0.5, creases < 0.5) is preserved but the radius response differs from GOO.",
+      "external_strategy": "Ship the GOO Curvature asset; analyze detects it and the report marks it yellow with the AO/Fresnel note.",
+      "detect": {
+        "groups": ["GOO Curvature"]
+      }
+    },
+    {
+      "id": "A18",
+      "name": "SDF shape primitives",
+      "area": "procedural",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [20],
+      "source_features": ["SDF Primitive - 16 3D + 28 2D shapes"],
+      "rationale": "The shipped group covers eight representative shapes instead of GOO's 44, so common primitives work while the full shape catalogue does not.",
+      "external_strategy": "Ship the GOO SDF Primitive asset; analyze detects it by group name and the report marks it yellow with the reduced shape list.",
+      "detect": {
+        "groups": ["GOO SDF Primitive"]
+      }
+    },
+    {
+      "id": "A19",
+      "name": "SDF operations, vector ops and noise",
+      "area": "procedural",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [21, 22, 23],
+      "source_features": [
+        "SDF Op - 32 operations",
+        "SDF Vector Op - 25 modifiers",
+        "SDF Noise"
+      ],
+      "rationale": "The three groups implement eight operations, eight modifiers and an fBM distance perturbation respectively; the set is representative rather than exhaustive.",
+      "external_strategy": "Ship GOO SDF Op, SDF Vector Op and SDF Noise assets; analyze flags any SDF group and the report marks the cluster yellow.",
+      "detect": {
+        "groups": ["GOO SDF Op", "GOO SDF Vector Op", "GOO SDF Noise"]
+      }
+    },
+    {
+      "id": "A20",
+      "name": "Water Ripples",
+      "area": "procedural",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [25],
+      "source_features": ["Water Ripples - Drops / Ripples / Flow / Caustic"],
+      "rationale": "The single radial sine field with exponential decay matches the Ripples mode but has no Drops/Flow/Caustic switch, so only one of GOO's four behaviours is approximated.",
+      "external_strategy": "Ship the GOO Water Ripples asset; analyze detects it and the report marks it yellow, naming the missing modes.",
+      "detect": {
+        "groups": ["GOO Water Ripples"]
+      }
+    },
+    {
+      "id": "A21",
+      "name": "OKLab Color Ramp",
+      "area": "procedural",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [27],
+      "source_features": ["OKLab Color Ramp"],
+      "rationale": "The group uses the exact OKLab matrix but only four stops, while GOO exposes an arbitrary-stop ramp widget.",
+      "external_strategy": "Ship the GOO OKLab Color Ramp asset; analyze flags any OKLab group and the report marks it yellow with the stop-count limit.",
+      "detect": {
+        "flags": ["oklab"]
+      }
+    },
+    {
+      "id": "A22",
+      "name": "Scene Time (Start/End Frame)",
+      "area": "procedural",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [28],
+      "source_features": ["Scene Time - Start Frame / End Frame"],
+      "rationale": "A GeometryNodeTree exposes native Seconds/Frame and refreshes Start/End Frame through frame_change_pre/render_pre handlers; the values are correct but the refresh is a handler side effect rather than a renderer uniform.",
+      "external_strategy": "Ship the GOO Scene Time group plus its handlers; analyze reports the scene_time flag and the report marks it yellow.",
+      "detect": {
+        "flags": ["scene_time"]
+      }
+    },
+    {
+      "id": "A23",
+      "name": "Active Camera geometry-node override",
+      "area": "geometry",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [30],
+      "source_features": ["Active camera override"],
+      "rationale": "The GOO Active Camera group switches between the override Object and the scene camera with native nodes; native Active Camera nodes created outside the group still read scene.camera because C++ injection is impossible.",
+      "external_strategy": "Ship the GOO Active Camera asset and offer --camera in the bridge CLI; analyze reports active_camera_override and the report marks it yellow.",
+      "detect": {
+        "flags": ["active_camera_override"]
+      }
+    },
+    {
+      "id": "A24",
+      "name": "Grease Pencil texture randomize and sculpt smoothing",
+      "area": "grease-pencil",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [32, 33],
+      "source_features": [
+        "Texture Mapping randomize - Stroke/Fill offset, scale, rotation, seed",
+        "Context-based sculpt mode smoothing"
+      ],
+      "rationale": "Operators write a per-stroke attribute for material variation and run Laplacian smoothing on the current drawing; GOO instead randomises the texture transform and blends smoothing into the sculpt brush, so the data path differs.",
+      "external_strategy": "Bridge operators provide both tools; the report cannot inspect GP attributes, so the item is marked manual at scan time.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "A25",
+      "name": "Pose authoring utilities",
+      "area": "rigging",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [37, 39, 40],
+      "source_features": [
+        "Isolate bones overlay",
+        "Copy Rotation constraint: Invert All",
+        "Merge Bone Constraints"
+      ],
+      "rationale": "Operators hide/restore unselected bones, set the per-axis invert flags and copy constraints by bone name; GOO's isolate mode is modal and its merge walks selected bones across objects, so behaviour is close but not identical.",
+      "external_strategy": "Bridge pose operators cover the three workflows; the report marks them manual because pose state is not part of the analyze JSON.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "N1",
+      "name": "Shadow-map internals (shadow ID buffer, contact shadows, bias/CSM/light cache)",
+      "area": "renderer",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [5, 6, 7],
+      "source_features": [
+        "Shadow ID High ID Bit Depth (32-bit shadow IDs)",
+        "Contact shadows (distance/bias/thickness)",
+        "Shadow buffer bias / Cascaded Shadow Maps / light-cache bake UI"
+      ],
+      "rationale": "EEVEE Next exposes no shadow-ID buffer, contact-shadow controls, light-cache bake or shadow-bias API; these live in GOO's C++ renderer and cannot be reached from Python.",
+      "external_strategy": "The report marks them red and points at the native-extension C++ route; the bridge can still bake shadows in an external pass if a project needs them.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N2",
+      "name": "Alpha-blended holdout for transparent materials",
+      "area": "renderer",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [11],
+      "source_features": ["Holdout for transparent materials"],
+      "rationale": "Blender 5.2 holdout is a whole-object mask; there is no alpha-blend holdout in EEVEE, and the compositor cannot reconstruct it from stock passes.",
+      "external_strategy": "Report as unavailable; use a cryptomatte/object-index mask in an external composite when needed.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N3",
+      "name": "EEVEE view-layer sample override",
+      "area": "renderer",
+      "level": "L0",
+      "goo_status": "N/A for EEVEE",
+      "source_rows": [13],
+      "source_features": ["View-layer sample override for EEVEE"],
+      "rationale": "ViewLayer.samples follows Cycles semantics and is ignored by EEVEE; EEVEE samples come from scene.eevee.taa_render_samples, so a per-view-layer override cannot be expressed.",
+      "external_strategy": "The bridge exposes scene-level --samples and reports the per-layer override as unavailable.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N4",
+      "name": "Radiance buffer copy between refraction passes",
+      "area": "renderer",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [15],
+      "source_features": ["Radiance buffer copied between Refraction passes"],
+      "rationale": "The refraction radiance buffer is a GOO renderer internal with no public 5.2 API.",
+      "external_strategy": "Report as unavailable; approximate with screen-space refraction compositing externally if required.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N5",
+      "name": "Principled/SSS shader internals",
+      "area": "renderer",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [16],
+      "source_features": ["Principled/SSS shader internals"],
+      "rationale": "GPU_MATFLAG_PRINCIPLED_* flags and use_sss are internal C++ shader state, not exposed to Blender Python.",
+      "external_strategy": "Report as unavailable; rely on stock Principled BSDF terms and document the difference.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N6",
+      "name": "Screen-space shadows and refraction internals",
+      "area": "renderer",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [19],
+      "source_features": ["Screen-space shadows / refraction internals"],
+      "rationale": "These are GOO renderer passes with no equivalent node or Python hook in EEVEE Next.",
+      "external_strategy": "Report as unavailable; the bridge depth/mist passes only approximate the result.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N7",
+      "name": "Float socket inputs accept inf / -inf",
+      "area": "pipeline",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [29],
+      "source_features": ["Float inputs accept inf / -inf"],
+      "rationale": "Blender socket defaults reject non-finite floats, a core RNA limitation that no pure-Python add-on can bypass.",
+      "external_strategy": "Report as unavailable; builders should clamp to large finite values instead of infinity.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N8",
+      "name": "Continuous Trackball navigation",
+      "area": "viewport",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [36],
+      "source_features": ["Continuous Trackball"],
+      "rationale": "Trackball input and transform behaviour is implemented in Blender's C++ viewport core and cannot be reimplemented from Python.",
+      "external_strategy": "Report as unavailable; users keep Blender's native navigation.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N9",
+      "name": "Library Override Resync Enforce ignores Action ID pointers",
+      "area": "pipeline",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [41],
+      "source_features": ["Library Override Resync Enforce ignores Action ID pointers"],
+      "rationale": "Resync Enforce is C++ library-override logic; Python can only observe the resulting overrides.",
+      "external_strategy": "Report as unavailable and document manual resync handling for linked rigs.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N10",
+      "name": "Outliner hidden-bone row filter",
+      "area": "interface",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [38],
+      "source_features": ["Hide pose bones / Outliner hidden-bones filter"],
+      "rationale": "The per-bone flag is reproduced on an ID property and shown in the bridge pose panel, but Blender 5.2 has no Outliner row-filter hook, so the filter row itself is missing.",
+      "external_strategy": "Store and expose the flag, and mark the row filter as manual/unsupported detail in the report.",
+      "detect": {
+        "manual": true
+      }
+    },
+    {
+      "id": "N11",
+      "name": "Disable Search on Key Press",
+      "area": "interface",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [42],
+      "source_features": ["Disable Search on Key Press"],
+      "rationale": "Add-menu search behaviour is C++ key handling; there is no Python preference or callback that can suppress it.",
+      "external_strategy": "Report as unavailable; note the native shortcut workaround in the documentation.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N12",
+      "name": "Grease Pencil 3.0",
+      "area": "grease-pencil",
+      "level": "L2",
+      "goo_status": "Native",
+      "source_rows": [31],
+      "source_features": ["Grease Pencil 3.0"],
+      "rationale": "Grease Pencil v3 is native in Blender 5.2, and all bridge GP tools are written against GP v3 data, so nothing needs porting.",
+      "external_strategy": "Mark as native in the report; no asset or operator is required.",
+      "detect": {
+        "native": true
+      }
+    },
+    {
+      "id": "N13",
+      "name": "Material icon rendering and VSE relative-path strips",
+      "area": "interface",
+      "level": "L0",
+      "goo_status": "N/A",
+      "source_rows": [46, 48],
+      "source_features": [
+        "Option to turn off material icon rendering",
+        "Linked scene strips with relative paths in the VSE"
+      ],
+      "rationale": "Material thumbnails are drawn in C++ Outliner code, and VSE strip path handling is core C++; neither is reachable from Python.",
+      "external_strategy": "Report as unavailable; keep native icon/path behaviour and document the difference.",
+      "detect": {
+        "unsupported": true
+      }
+    },
+    {
+      "id": "N14",
+      "name": "Scene camera drop-down in the top bar",
+      "area": "interface",
+      "level": "L1",
+      "goo_status": "Approx",
+      "source_rows": [43],
+      "source_features": ["Scene camera drop-down in the top bar"],
+      "rationale": "The camera can be switched from a bridge panel or CLI, but Blender's top bar cannot be extended from Python, so the exact GOO widget placement is impossible.",
+      "external_strategy": "Provide the panel/CLI control and mark the top-bar placement as a documented UI deviation.",
+      "detect": {
+        "manual": true
+      }
+    }
+  ]
+}

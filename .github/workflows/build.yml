@@ -1,0 +1,170 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-x64
+            blender_url: https://download.blender.org/release/Blender5.2/blender-5.2.3-windows-x64.zip
+            blender_label: blender-5.2.3-windows-x64
+          - os: macos-latest
+            name: macos-arm64
+            blender_url: https://download.blender.org/release/Blender5.2/blender-5.2.3-macos-arm64.dmg
+            blender_label: blender-5.2.3-macos-arm64
+          - os: ubuntu-latest
+            name: linux-x64
+            blender_url: https://download.blender.org/release/Blender5.2/blender-5.2.3-linux-x64.tar.xz
+            blender_label: blender-5.2.3-linux-x64
+
+    env:
+      PYTHONUNBUFFERED: "1"
+      GOO_SKIP_GUI: "1"
+      GOO_BLENDER_VERSION: "5.2.3"
+      GOO_SUITE_HOME: ${{ runner.temp }}/goo-suite-home
+      GALLIUM_DRIVER: llvmpipe
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      MESA_GL_VERSION_OVERRIDE: "4.5"
+      MESA_GLSL_VERSION_OVERRIDE: "450"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python build tools
+        shell: bash
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install Blender (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "blender.zip"
+          Invoke-WebRequest -Uri "${{ matrix.blender_url }}" -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath (Join-Path $env:RUNNER_TEMP "blender") -Force
+          $exe = Get-ChildItem (Join-Path $env:RUNNER_TEMP "blender") -Recurse -Filter blender.exe |
+            Select-Object -First 1
+          if (-not $exe) { throw "blender.exe not found after extraction" }
+          $path = $exe.FullName -replace '\\', '/'
+          "GOO_BLENDER=$path" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+
+      - name: Install Blender (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$RUNNER_TEMP/blender.dmg"
+          mount="$RUNNER_TEMP/blender-mnt"
+          curl -L --retry 3 --fail -o "$dmg" "${{ matrix.blender_url }}"
+          mkdir -p "$mount"
+          hdiutil attach "$dmg" -nobrowse -mountpoint "$mount" -quiet
+          test -x "$mount/Blender.app/Contents/MacOS/Blender"
+          echo "GOO_BLENDER=$mount/Blender.app/Contents/MacOS/Blender" >> "$GITHUB_ENV"
+
+      - name: Install Blender (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libx11-6 libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 \
+            libsm6 libice6 libxkbcommon0 libgomp1 xz-utils xvfb xauth
+          curl -L --retry 3 --fail -o "$RUNNER_TEMP/blender.tar.xz" "${{ matrix.blender_url }}"
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+          blender="$RUNNER_TEMP/${{ matrix.blender_label }}/blender"
+          chmod +x "$blender"
+          test -x "$blender"
+          echo "GOO_BLENDER=$blender" >> "$GITHUB_ENV"
+          echo "LIBGL_ALWAYS_SOFTWARE=1" >> "$GITHUB_ENV"
+
+      - name: Install Mesa software OpenGL (Windows)
+        if: runner.os == 'Windows'
+        uses: ssciwr/setup-mesa-dist-win@v3
+        with:
+          version: '26.3.0'
+          deployment-choice: '1'
+
+      - name: Verify Blender executable
+        shell: bash
+        run: '"$GOO_BLENDER" --version'
+
+      - name: Build release artifacts
+        shell: bash
+        run: python tools/build_release.py
+
+      - name: Verify release archives
+        shell: bash
+        run: python -m goo verify --json
+
+      - name: Portable path tests
+        shell: bash
+        run: python tests/test_paths.py
+
+      - name: Full test suite (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: xvfb-run -a python -m unittest discover -s tests -v
+
+      - name: Full test suite (Windows/macOS)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: python -m unittest discover -s tests -v
+
+      - name: Add-on checks in Blender (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: xvfb-run -a "$GOO_BLENDER" --background --factory-startup --python tests/test_addon.py
+
+      - name: Add-on checks in Blender (Windows/macOS)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: '"$GOO_BLENDER" --background --factory-startup --python tests/test_addon.py'
+
+      - name: Install wheel and run smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --force-reinstall --no-deps dist/goo_suite-*.whl
+          work="$RUNNER_TEMP/wheel-smoke"
+          mkdir -p "$work"
+          cd "$work"
+          python -m goo --version
+          python -m goo_bridge --version
+          python -m goo doctor --json
+          python -m goo_bridge compat --json > compat.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path("compat.json").read_text(encoding="utf-8"))
+          assert payload["matrix"]["counts"] == {"L2": 13, "L1": 15, "L0": 11}, payload["matrix"]["counts"]
+          print("wheel smoke OK")
+          PY
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: goo-suite-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error

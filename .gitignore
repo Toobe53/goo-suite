@@ -1,0 +1,15 @@
+# Local build/verification output
+_work/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

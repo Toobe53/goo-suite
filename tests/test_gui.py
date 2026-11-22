@@ -207,6 +207,7 @@ class SelftestTests(unittest.TestCase):
         cls._temp = tempfile.TemporaryDirectory()
         cls.env = _env(
             GOO_BRIDGE_SELFTEST="1",
+            GOO_SUITE_HOME=cls._temp.name,
             GOO_BRIDGE_HOME=cls._temp.name,
         )
         cls.result = _run(sys.executable, "-m", "goo_bridge", "gui", env=cls.env)

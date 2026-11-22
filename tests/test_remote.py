@@ -526,7 +526,10 @@ class RemoteCliTests(unittest.TestCase):
         self.temp = Path(self._temp.name)
         self.home = self.temp / "home"
         self.home.mkdir()
-        patcher = mock.patch.dict(os.environ, {"GOO_BRIDGE_HOME": str(self.home)})
+        patcher = mock.patch.dict(
+            os.environ,
+            {"GOO_SUITE_HOME": str(self.home), "GOO_BRIDGE_HOME": str(self.home)},
+        )
         patcher.start()
         self.addCleanup(patcher.stop)
         self.workspace = self.temp / "workspace"

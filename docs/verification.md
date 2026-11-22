@@ -11,29 +11,42 @@ for the add-on internals.
 | --- | --- |
 | Full Python suite | `128 tests, OK (skipped=4)`; skips are GUI without tkinter and Blender-only checks |
 | Blender add-on checks | `82 passed, 0 failed` with `--factory-startup --background` |
-| Portable path tests | 13 tests, OK |
+| Portable path tests | 14 tests, OK |
 | Add-on zip | `goo_npr-1.0.0.zip` — 27 files; SHA-256 in `dist/SHA256SUMS` |
 | Wheel | `goo_suite-1.0.0-py3-none-any.whl` — 77 entries; SHA-256 in `dist/SHA256SUMS` |
 | Source zip | `goo-suite-1.0.0-src.zip` — 114 files; SHA-256 in `dist/SHA256SUMS` |
 | `goo verify` | 3 files, 27/77/114 entries, SHA-256 and required members OK |
 | Wheel install smoke | installed into a clean target, `goo 1.0.0`, `goo-bridge 1.0.0`, `goo doctor --json` finds Blender 5.2.3 |
+| GitHub Actions | Windows x64, Linux x64 and macOS arm64 jobs all green; each builds, verifies, runs the full suite and Blender add-on checks, installs the wheel and uploads artifacts |
 
 The wheel smoke test is deliberately run outside the source tree so the installed
 copy, not the checkout, resolves the entry points. The `goo-bridge` entry point is
 kept for one release and reads the new `GOO Suite` config directory (migrating the
 old file on save).
 
-All numbers below were produced on this machine, not estimated. Environment:
+All local numbers below were produced on this machine, not estimated. Environment:
 
 * Windows 11, Blender **5.2.3 LTS** (hash `e13b728c6880`, built 2026-10-22),
   bundled Python **3.13.13**, numpy **2.3.4**.
-* Repository root `goo-port/`; the add-on is loaded from source (`sys.path`) by the
+* Repository root `goo-suite/`; the add-on is loaded from source (`sys.path`) by the
   tests, and the CLI runs with the host Python
   `C:\Users\zbq\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe`
   (3.12.14), which in turn launches Blender headless.
 * Reproduce: `blender --factory-startup --background --python tests/test_addon.py`
   (add-on suite) and `python tests/test_cli.py` (CLI smoke tests), then the CLI commands
   quoted in each section.
+
+### CI artifacts / CI 产物
+
+The release workflow builds the same three artifacts on each runner. Zip metadata
+differs between operating systems, so the SHA-256 values below are the hashes of the
+uploaded CI artifacts, not of a local rebuild.
+
+| Artifact | Linux x64 | macOS arm64 | Windows x64 |
+| --- | --- | --- | --- |
+| `goo_npr-1.0.0.zip` | `056cce7417059137d2cf05f9476e3ff46599337207a1d020ff992063711085a3` | same as Linux | `95c59c9a7e683ca52d0c146cf8e548deb364011284f3cfebb91cafff987ebb30` |
+| `goo_suite-1.0.0-py3-none-any.whl` | `a576c4b01e024a5fb1f445768032c490efeb5aa0892f4226659699410075bbfd` | `7d2e699db0212a5b840d941d578fc6e97d6cb925d3a38b551e1d6eff3aefdeef` | `47dacc9dcf3115fd0024ccc27382ed033bdea7408264d5574f827e3b89ba9d48` |
+| `goo-suite-1.0.0-src.zip` | `5b0315761377da252644716b73f5a8932ed287a335f631455d9dd649b71137b9` | same as Linux | `9b0b9428d441785298151eb6f9564f88fd054342b7cdca47beb32b02827e89c9` |
 
 ## 1. Blender 5.2 API probes / API 探测
 

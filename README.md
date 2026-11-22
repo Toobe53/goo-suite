@@ -72,7 +72,7 @@ Inside Blender: `Node Editor ▸ Add ▸ GOO Engine`, `Properties ▸ Scene ▸ 
 
 ## Documentation
 
-- [User tutorial (bilingual)](docs/tutorial.md)
+- [User tutorial (Chinese, with English command reference)](docs/tutorial.md)
 - [CLI reference](docs/cli.md)
 - [Remote rendering](docs/remote.md)
 - [Architecture](docs/architecture.md)

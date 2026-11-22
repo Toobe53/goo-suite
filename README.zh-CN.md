@@ -70,7 +70,7 @@ goo gui
 
 ## 文档
 
-- [用户教程（中英双语）](docs/tutorial.md)
+- [用户教程（中文，命令保留英文）](docs/tutorial.md)
 - [CLI 参考](docs/cli.md)
 - [远程渲染](docs/remote.md)
 - [架构](docs/architecture.md)

@@ -1,7 +1,7 @@
 # GOO Suite 使用教程 / User Tutorial
 
 本文面向第一次使用 **GOO Suite** 的用户：它把 GOO Engine 4.4 的 NPR 节点库、Blender 5.2 插件、
-本地/远程渲染和兼容性报告合并成一个可移植工具。English follows each section.
+本地/远程渲染和兼容性报告合并成一个可移植工具。教程以中文为主，命令、选项和英文术语保持原文。
 
 ## 1. 安装 / Install
 

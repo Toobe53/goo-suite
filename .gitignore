@@ -1,5 +1,6 @@
 # Local build/verification output
 _work/
+release-assets/
 .goo-suite-home/
 build/
 dist/

@@ -39,7 +39,7 @@ jobs:
       PYTHONUNBUFFERED: "1"
       GOO_SKIP_GUI: "1"
       GOO_BLENDER_VERSION: "5.2.3"
-      GOO_SUITE_HOME: ${{ runner.temp }}/goo-suite-home
+      GOO_SUITE_HOME: ${{ github.workspace }}/.goo-suite-home
       GALLIUM_DRIVER: llvmpipe
       LIBGL_ALWAYS_SOFTWARE: "1"
       MESA_GL_VERSION_OVERRIDE: "4.5"

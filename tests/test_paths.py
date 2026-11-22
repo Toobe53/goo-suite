@@ -65,7 +65,7 @@ class UserConfigPathTest(unittest.TestCase):
             suite_config.sys, "platform", "darwin"
         ), mock.patch.object(
             suite_config, "_home_path", return_value=PurePosixPath("/Users/Case")
-        ):
+        ), mock.patch.dict(os.environ, {}, clear=True):
             path = suite_config.config_path()
         self.assertEqual(
             _posix(path),
